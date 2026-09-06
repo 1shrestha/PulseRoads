@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PulseRoads — Turning Every Vehicle Movement into Useful Energy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --night:#12151a;
+    --road:#2b2e33;
+    --road-light:#3d4149;
+    --yellow:#e8b93f;
+    --electric:#35d0c0;
+    --red:#e4572e;
+    --paper:#ece8de;
+    --steel:#7b828c;
+    --green:#6fcf7a;
+    --stage-h: 100vh;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:#000;height:100%;}
+  body{
+    font-family:'Space Grotesk',sans-serif;
+    color:var(--paper);
+    overflow:hidden;
+  }
+  .film{
+    position:relative;
+    width:100%;
+    height:100vh;
+    background:
+      radial-gradient(ellipse 60% 50% at 22% 20%, rgba(232,185,63,.07), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 80% 78%, rgba(53,208,192,.08), transparent 60%),
+      var(--night);
+    display:flex;
+    flex-direction:column;
+  }
+  .ambient{
+    position:absolute; inset:0; z-index:0; pointer-events:none; overflow:hidden;
+  }
+  .ambient span{
+    position:absolute; border-radius:50%; filter:blur(1px);
+    background:var(--yellow); opacity:.5;
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    from{ transform:translateY(0); opacity:0; }
+    10%{ opacity:.6; }
+    90%{ opacity:.4; }
+    to{ transform:translateY(-100vh); opacity:0; }
+  }
+  .letterbox{
+    position:absolute; left:0; right:0; height:6vh; background:#000; z-index:50;
+  }
+  .letterbox.top{top:0;} .letterbox.bottom{bottom:0;}
+
+  .stage-wrap{
+    position:relative;
+    flex:1;
+    margin:6vh 0;
+    overflow:hidden;
+  }
+  .scene{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    opacity:0; pointer-events:none;
+    transition:opacity .6s ease;
+  }
+  .scene.active{ opacity:1; pointer-events:auto; }
+
+  .scene-inner{ width:min(1100px, 92%); position:relative; }
+
+  .cap{
+    position:absolute; left:0; right:0; bottom:6%;
+    text-align:center;
+    font-size:clamp(14px,1.6vw,20px);
+    color:var(--paper);
+    letter-spacing:.2px;
+    opacity:0;
+  }
+  .scene.active .cap{ animation: capIn .7s ease .3s forwards; }
+  @keyframes capIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  .scene-title{
+    position:absolute; top:4%; left:0; right:0;
+    font-size:clamp(20px,2.6vw,32px);
+    font-weight:600;
+    line-height:1.35;
+    padding:6px 5% 0;
+    color:var(--paper);
+    text-align:center;
+    text-shadow:0 2px 20px rgba(0,0,0,.5);
+    opacity:0;
+  }
+  .scene.active .scene-title{ animation: capIn .6s ease .1s forwards; }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    position:absolute; bottom:1.6vh; left:0; right:0; z-index:60;
+    display:flex; align-items:center; justify-content:center; gap:14px;
+  }
+  .dot{
+    width:9px; height:9px; border-radius:50%; background:#4a4f57; cursor:pointer;
+    transition:background .3s;
+  }
+  .dot.on{ background:var(--yellow); }
+  .playbtn{
+    position:absolute; z-index:60; background:none; border:1px solid var(--paper);
+    color:var(--paper); border-radius:50%; width:22px; height:22px; cursor:pointer;
+    font-size:11px; display:flex; align-items:center; justify-content:center;
+    left:24px; bottom:1.5vh;
+  }
+  .progress-bar{
+    position:absolute; top:0; left:0; height:2px; background:var(--yellow); width:0%;
+  }
+  .progress-track{
+    position:absolute; top:6vh; left:0; right:0; height:2px; background:rgba(255,255,255,.08); z-index:55;
+  }
+
+  .titlecard{
+    text-align:center;
+  }
+  .brandmark{
+    width:64px; height:64px; margin:0 auto 22px; border-radius:50%;
+    border:1px solid rgba(232,185,63,.4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; color:var(--yellow);
+    box-shadow:0 0 40px rgba(232,185,63,.25);
+    animation:floatUpDown 3.2s ease-in-out infinite;
+  }
+  .titlecard h1{
+    font-size:clamp(34px,7vw,72px); margin:0 0 6px; font-weight:700; letter-spacing:-1px;
+    background:linear-gradient(180deg, var(--paper) 30%, var(--yellow) 130%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    animation:floatUpDown 3.2s ease-in-out infinite;
+    text-shadow:0 0 60px rgba(232,185,63,.18);
+  }
+  @keyframes floatUpDown{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-12px); }
+  }
+  .underline{
+    width:120px; height:2px; margin:0 auto 22px;
+    background:linear-gradient(90deg, transparent, var(--electric), transparent);
+    animation:underlinePulse 2.6s ease-in-out infinite;
+  }
+  @keyframes underlinePulse{ 0%,100%{ opacity:.4; width:80px;} 50%{ opacity:1; width:150px;} }
+  .titlecard .tagline{
+    color:var(--paper); font-size:clamp(14px,1.7vw,18px); margin:0 0 14px; opacity:.9;
+  }
+  .founder-line{
+    color:var(--steel); font-family:'IBM Plex Mono',monospace; font-size:12.5px;
+    letter-spacing:.3px; margin:0 0 34px;
+  }
+  .founder-line a{ color:var(--electric); text-decoration:none; border-bottom:1px solid rgba(53,208,192,.35); }
+  .founder-line a:hover{ border-bottom-color:var(--electric); }
+  .btnrow{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .startbtn{
+    font-family:inherit; background:var(--yellow); color:#1a1a1a; border:none;
+    padding:14px 34px; font-size:16px; font-weight:600; border-radius:2px; cursor:pointer;
+    box-shadow:0 0 30px rgba(232,185,63,.25);
+    transition:background .2s, transform .2s, box-shadow .2s;
+  }
+  .startbtn:hover{ background:#f2c65c; transform:translateY(-2px); box-shadow:0 4px 30px rgba(232,185,63,.4); }
+  .linkbtn{
+    font-family:inherit; background:transparent; color:var(--electric);
+    border:1px solid rgba(53,208,192,.5); padding:13px 28px; font-size:15px; font-weight:600;
+    border-radius:2px; cursor:pointer; text-decoration:none; display:inline-block;
+    transition:background .2s, color .2s, transform .2s;
+  }
+  .linkbtn:hover{ background:var(--electric); color:#0c1a18; transform:translateY(-2px); }
+
+  /* ---------- Scene 1: Road ---------- */
+  .road-svg{ width:100%; height:auto; display:block; }
+  .veh{ animation-timing-function:linear; animation-iteration-count:infinite; }
+  .scene.active .veh1{ animation:driveR 4.5s infinite linear; }
+  .scene.active .veh2{ animation:driveR 6s infinite linear; animation-delay:1.2s; }
+  .scene.active .veh3{ animation:driveL 5.2s infinite linear; }
+  .scene.active .veh4{ animation:driveR 3.6s infinite linear; animation-delay:2.4s; }
+  @keyframes driveR{ from{transform:translateX(-160px);} to{transform:translateX(1160px);} }
+  @keyframes driveL{ from{transform:translateX(1160px) scaleX(-1);} to{transform:translateX(-160px) scaleX(-1);} }
+  .zoomtarget{ transform-origin:50% 62%; }
+  .scene.active .zoomtarget{ animation:zoomIn 9s ease forwards; }
+  @keyframes zoomIn{ 0%{transform:scale(1);} 60%{transform:scale(1);} 100%{transform:scale(2.6) translateY(2%);} }
+
+  /* ---------- Scene 2: cutaway ---------- */
+  .wheel{ transform-origin:center; }
+  .scene.active .wheel{ animation:press 2.4s ease-in-out infinite; }
+  @keyframes press{ 0%,100%{transform:translateY(0);} 45%{transform:translateY(18px);} 55%{transform:translateY(18px);} }
+  .piezo{ transition:fill .2s; }
+  .scene.active .piezo{ animation:glow 2.4s ease-in-out infinite; }
+  @keyframes glow{ 0%,40%{fill:#4a4f57;} 50%{fill:var(--electric);} 65%,100%{fill:#4a4f57;} }
+  .bolt{ opacity:0; }
+  .scene.active .bolt{ animation:boltUp 2.4s ease-in-out infinite; }
+  @keyframes boltUp{ 0%,45%{opacity:0; transform:translateY(0);} 55%{opacity:1; transform:translateY(-10px);} 75%{opacity:0; transform:translateY(-45px);} 100%{opacity:0;} }
+
+  /* ---------- Scene 3: hybrid diagram ---------- */
+  .hbox{
+    fill:#1c2027; stroke:var(--steel); stroke-width:1.2;
+  }
+  .hbox.lit{ animation:none; }
+  .scene.active .h1{ animation:litbox 5s ease infinite; animation-delay:.2s; }
+  .scene.active .h2{ animation:litbox 5s ease infinite; animation-delay:.9s; }
+  .scene.active .h3{ animation:litbox 5s ease infinite; animation-delay:1.6s; }
+  .scene.active .h4{ animation:litbox 5s ease infinite; animation-delay:2.3s; }
+  .scene.active .h5{ animation:litbox 5s ease infinite; animation-delay:3.0s; }
+  @keyframes litbox{ 0%,8%{stroke:var(--steel); fill:#1c2027; filter:none;} 15%,30%{stroke:var(--electric); fill:#233a38; filter:drop-shadow(0 0 10px rgba(53,208,192,.55));} 40%,100%{stroke:var(--steel); fill:#1c2027; filter:none;} }
+  .flow-dash{ stroke-dasharray:6 6; }
+  .scene.active .flow-dash{ animation:dashmove 1.2s linear infinite; }
+  @keyframes dashmove{ to{ stroke-dashoffset:-24; } }
+
+  /* ---------- Scene 4: sensors ---------- */
+  .sensor-pulse{ transform-origin:center; }
+  .scene.active .sensor-pulse{ animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{transform:scale(1); opacity:1;} 50%{transform:scale(1.18); opacity:.7;} }
+  .wireless-dash{ stroke-dasharray:5 7; }
+  .scene.active .wireless-dash{ animation:dashmove2 1s linear infinite; }
+  @keyframes dashmove2{ to{stroke-dashoffset:-24;} }
+
+  /* ---------- Scene 5: dashboard ---------- */
+  .dash-panel{
+    background:#171a20; border:1px solid #2a2e35; border-radius:6px; padding:22px 26px;
+  }
+  .dash-row{ display:flex; gap:14px; margin-bottom:14px; }
+  .stat{
+    flex:1; background:#1d2129; border:1px solid #2a2e35; border-radius:5px; padding:14px 16px;
+    transition:border-color .3s, box-shadow .3s;
+  }
+  .scene.active .stat{ animation:statGlow 4.5s ease-in-out infinite; }
+  .scene.active .stat:nth-child(2){ animation-delay:.3s; }
+  .scene.active .stat:nth-child(3){ animation-delay:.6s; }
+  .scene.active .stat:nth-child(4){ animation-delay:.9s; }
+  .scene.active .stat:nth-child(5){ animation-delay:1.2s; }
+  @keyframes statGlow{ 0%,85%,100%{ border-color:#2a2e35; box-shadow:none;} 92%{ border-color:var(--electric); box-shadow:0 0 18px rgba(53,208,192,.2);} }
+  .dash-panel{ box-shadow:0 20px 60px rgba(0,0,0,.4); }
+  .stat-label{ font-size:11px; color:var(--steel); text-transform:none; margin-bottom:6px; }
+  .stat-val{ font-family:'IBM Plex Mono',monospace; font-size:clamp(18px,2vw,26px); color:var(--paper); }
+  .stat-val.energy{ color:var(--yellow); }
+  .stat-val.electric{ color:var(--electric); }
+  .trendline{ width:100%; height:70px; }
+  .trend-path{ stroke:var(--electric); stroke-width:2; fill:none; stroke-dasharray:400; stroke-dashoffset:400; }
+  .scene.active .trend-path{ animation:draw 3.2s ease forwards .4s; }
+  @keyframes draw{ to{stroke-dashoffset:0;} }
+  .ai-chip{
+    display:inline-flex; align-items:center; gap:8px; background:#20301f; border:1px solid var(--green);
+    color:var(--green); font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:8px 14px; border-radius:3px; margin-top:16px; opacity:0; transform:translateY(6px);
+  }
+  .scene.active .ai-chip{ animation:chipIn .6s ease forwards 3.4s; }
+  @keyframes chipIn{ to{opacity:1; transform:translateY(0);} }
+
+  /* ---------- Scene 6: city impact ---------- */
+  .node-pulse{ transform-origin:center; }
+  .scene.active .node-pulse{ animation:pulse2 2.2s ease-out infinite; }
+  @keyframes pulse2{ 0%{ r:3; opacity:1;} 100%{ r:22; opacity:0;} }
+  .impact-line{ stroke-dasharray:4 6; }
+  .scene.active .impact-line{ animation:dashmove3 1.4s linear infinite; }
+  @keyframes dashmove3{ to{stroke-dashoffset:-20;} }
+  .endcard{ text-align:center; opacity:0; }
+  .scene.active .endcard{ animation:capIn 1s ease 3.2s forwards; }
+  .endcard h2{
+    font-size:clamp(24px,3.6vw,42px); font-weight:700; margin:0 0 8px;
+    background:linear-gradient(180deg, var(--paper) 30%, var(--yellow) 140%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .endcard p{ color:var(--steel); font-size:clamp(12px,1.4vw,16px); margin:0 0 18px; }
+  .endcard .founder-line{ margin-bottom:16px; }
+  .endcard .linkbtn{ padding:11px 24px; font-size:14px; }
+
+</style>
+</head>
+<body>
+
+<div class="film">
+  <div class="letterbox top"></div>
+  <div class="letterbox bottom"></div>
+  <div class="progress-track"></div>
+  <div class="progress-bar" id="progressBar"></div>
+
+  <div class="stage-wrap">
+
+    <!-- SCENE 0: Title -->
+    <div class="scene active" data-duration="0" id="scene-title">
+      <div class="ambient" id="ambient"></div>
+      <div class="scene-inner titlecard">
+        <div class="brandmark">⚡</div>
+        <h1>PulseRoads</h1>
+        <div class="underline"></div>
+        <p class="tagline">Turning every vehicle movement into useful energy</p>
+        <p class="founder-line"><a href="https://pulseroads.netlify.app/" target="_blank" rel="noopener">pulseroads.netlify.app</a></p>
+        <div class="btnrow">
+          <button class="startbtn" id="startBtn">▶ Play film</button>
+          <a class="linkbtn" href="https://pulseroads.netlify.app/" target="_blank" rel="noopener">Visit the live app ↗</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCENE 1: Problem -->
+    <div class="scene" data-duration="8000" id="scene-1">
+      <div class="scene-title">A busy Indian road, energy going to waste</div>
+      <div class="scene-inner zoomtarget">
+        <svg class="road-svg" viewBox="0 0 1000 260">
+          <rect x="0" y="0" width="1000" height="260" fill="#12151a"/>
+          <rect x="0" y="143" width="1000" height="91" fill="#2b2e33"/>
+          <rect x="0" y="143" width="1000" height="5" fill="#3d4149"/>
+          <!-- lane dashes -->
+          <g fill="#e8b93f" opacity="0.7">
+            <rect x="0" y="187" width="40" height="5"/><rect x="80" y="187" width="40" height="5"/>
+            <rect x="160" y="187" width="40" height="5"/><rect x="240" y="187" width="40" height="5"/>
+            <rect x="320" y="187" width="40" height="5"/><rect x="400" y="187" width="40" height="5"/>
+            <rect x="560" y="187" width="40" height="5"/><rect x="640" y="187" width="40" height="5"/>
+            <rect x="720" y="187" width="40" height="5"/><rect x="800" y="187" width="40" height="5"/>
+            <rect x="880" y="187" width="40" height="5"/>
+          </g>
+          <!-- speed breaker -->
+          <path d="M460 190 Q500 169 540 190" fill="none" stroke="#7b828c" stroke-width="8"/>
+          <g font-family="Space Grotesk" font-size="11" fill="#7b828c">
+            <text x="443" y="215">speed breaker</text>
+          </g>
+          <!-- vehicles -->
+          <g class="veh veh1" transform="translate(-160,90)">
+            <rect x="0" y="0" width="70" height="26" rx="4" fill="#e4572e"/>
+            <circle cx="14" cy="28" r="7" fill="#111"/><circle cx="56" cy="28" r="7" fill="#111"/>
+          </g>
+          <g class="veh veh2" transform="translate(-160,55)">
+            <rect x="0" y="0" width="110" height="34" rx="3" fill="var(--paper)"/>
+            <circle cx="20" cy="36" r="8" fill="#111"/><circle cx="90" cy="36" r="8" fill="#111"/>
+          </g>
+          <g class="veh veh3" transform="translate(1160,100)">
+            <rect x="0" y="0" width="60" height="22" rx="4" fill="#35d0c0"/>
+            <circle cx="12" cy="24" r="6" fill="#111"/><circle cx="48" cy="24" r="6" fill="#111"/>
+          </g>
+          <g class="veh veh4" transform="translate(-160,108)">
+            <circle cx="10" cy="14" r="10" fill="#e8b93f"/>
+            <circle cx="4" cy="24" r="6" fill="#111"/><circle cx="26" cy="24" r="6" fill="#111"/>
+          </g>
+        </svg>
+      </div>
+      <div class="cap">Cars, buses and bikes cross this breaker every few seconds — the energy of every crossing is simply lost.</div>
+    </div>
+
+    <!-- SCENE 2: Hardware cutaway -->
+    <div class="scene" data-duration="8500" id="scene-2">
+      <div class="scene-title">Inside the PulseRoads speed breaker</div>
+      <div class="scene-inner">
+        <svg viewBox="0 0 1000 380" width="100%" height="auto">
+          <rect x="0" y="0" width="1000" height="380" fill="#12151a"/>
+          <!-- ground layers -->
+          <rect x="150" y="230" width="700" height="120" fill="#20242b" stroke="#2f343c"/>
+          <rect x="150" y="230" width="700" height="10" fill="#3d4149"/>
+          <!-- bump surface -->
+          <path d="M150 230 Q500 170 850 230" fill="none" stroke="#3d4149" stroke-width="12"/>
+          <!-- piezo modules -->
+          <rect class="piezo" x="330" y="255" width="70" height="26" rx="3" fill="#4a4f57"/>
+          <rect class="piezo" x="465" y="248" width="70" height="26" rx="3" fill="#4a4f57"/>
+          <rect class="piezo" x="600" y="255" width="70" height="26" rx="3" fill="#4a4f57"/>
+          <g font-family="Space Grotesk" font-size="11" fill="#7b828c">
+            <text x="335" y="300">piezo module</text>
+          </g>
+          <!-- wheel -->
+          <g class="wheel" transform="translate(455,60)">
+            <circle cx="0" cy="0" r="34" fill="#111" stroke="#7b828c" stroke-width="4"/>
+            <circle cx="0" cy="0" r="6" fill="#7b828c"/>
+          </g>
+          <!-- force arrow -->
+          <g class="wheel" transform="translate(455,60)">
+            <line x1="0" y1="34" x2="0" y2="100" stroke="var(--red)" stroke-width="3" marker-end="url(#arrowRed)"/>
+          </g>
+          <!-- bolts -->
+          <g class="bolt" fill="var(--electric)">
+            <path d="M365 250 l-8 16 h6 l-8 16 l16-18h-6z" transform="translate(0,-10)"/>
+          </g>
+          <g class="bolt" fill="var(--electric)">
+            <path d="M500 244 l-8 16 h6 l-8 16 l16-18h-6z" transform="translate(0,-10)"/>
+          </g>
+          <g class="bolt" fill="var(--electric)">
+            <path d="M635 250 l-8 16 h6 l-8 16 l16-18h-6z" transform="translate(0,-10)"/>
+          </g>
+          <defs>
+            <marker id="arrowRed" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="var(--red)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <div class="cap">Every wheel that presses the module converts mechanical pressure directly into electrical energy.</div>
+    </div>
+
+    <!-- SCENE 3: Hybrid harvesting -->
+    <div class="scene" data-duration="10500" id="scene-3">
+      <div class="scene-title">A hybrid energy-harvesting system</div>
+      <div class="scene-inner">
+        <svg viewBox="0 0 1000 320" width="100%" height="auto">
+          <rect x="0" y="0" width="1000" height="320" fill="#12151a"/>
+          <!-- source boxes -->
+          <rect class="hbox h1" x="30" y="30" width="150" height="60" rx="4"/>
+          <text x="105" y="65" text-anchor="middle" fill="var(--paper)" font-size="13">Piezoelectric</text>
+          <rect class="hbox h1" x="30" y="120" width="150" height="60" rx="4"/>
+          <text x="105" y="155" text-anchor="middle" fill="var(--paper)" font-size="12">Vehicle vibration</text>
+          <rect class="hbox h2" x="30" y="210" width="150" height="60" rx="4"/>
+          <text x="105" y="235" text-anchor="middle" fill="var(--paper)" font-size="13">Thermoelectric</text>
+          <text x="105" y="253" text-anchor="middle" fill="var(--steel)" font-size="11">asphalt ↔ ground ΔT</text>
+
+          <rect class="hbox h2" x="230" y="70" width="140" height="60" rx="4"/>
+          <text x="300" y="105" text-anchor="middle" fill="var(--paper)" font-size="13">Solar auxiliary</text>
+
+          <!-- conditioning -->
+          <rect class="hbox h3" x="440" y="120" width="170" height="70" rx="4"/>
+          <text x="525" y="150" text-anchor="middle" fill="var(--paper)" font-size="13">Power</text>
+          <text x="525" y="168" text-anchor="middle" fill="var(--paper)" font-size="13">conditioning</text>
+
+          <!-- storage -->
+          <rect class="hbox h4" x="680" y="120" width="150" height="70" rx="4"/>
+          <text x="755" y="150" text-anchor="middle" fill="var(--paper)" font-size="13">Battery /</text>
+          <text x="755" y="168" text-anchor="middle" fill="var(--paper)" font-size="13">supercapacitor</text>
+
+          <!-- output -->
+          <rect class="hbox h5" x="870" y="120" width="100" height="70" rx="4"/>
+          <text x="920" y="150" text-anchor="middle" fill="var(--paper)" font-size="12">Usable</text>
+          <text x="920" y="168" text-anchor="middle" fill="var(--paper)" font-size="12">power</text>
+
+          <!-- connecting flow lines -->
+          <g stroke="var(--electric)" stroke-width="2" fill="none">
+            <path class="flow-dash" d="M180 60 L230 60 L230 100"/>
+            <path class="flow-dash" d="M180 150 L440 150"/>
+            <path class="flow-dash" d="M180 240 L440 240 L440 165"/>
+            <path class="flow-dash" d="M370 100 L440 100 L440 135"/>
+            <path class="flow-dash" d="M610 155 L680 155"/>
+            <path class="flow-dash" d="M830 155 L870 155"/>
+          </g>
+        </svg>
+      </div>
+      <div class="cap">Vehicle movement and heat are harvested, conditioned, then stored — ready to power real devices.</div>
+    </div>
+
+    <!-- SCENE 4: Smart sensing -->
+    <div class="scene" data-duration="8500" id="scene-4">
+      <div class="scene-title">Smart sensing, sent wirelessly</div>
+      <div class="scene-inner">
+        <svg viewBox="0 0 1000 320" width="100%" height="auto">
+          <rect x="0" y="0" width="1000" height="320" fill="#12151a"/>
+          <!-- sensor nodes -->
+          <g font-family="Space Grotesk" font-size="12" fill="var(--paper)">
+            <g transform="translate(120,60)">
+              <circle class="sensor-pulse" cx="0" cy="0" r="24" fill="none" stroke="var(--electric)" stroke-width="2"/>
+              <text x="0" y="46" text-anchor="middle">Vehicle load</text>
+            </g>
+            <g transform="translate(120,140)">
+              <circle class="sensor-pulse" cx="0" cy="0" r="24" fill="none" stroke="var(--electric)" stroke-width="2"/>
+              <text x="0" y="46" text-anchor="middle">Traffic flow</text>
+            </g>
+            <g transform="translate(120,220)">
+              <circle class="sensor-pulse" cx="0" cy="0" r="24" fill="none" stroke="var(--electric)" stroke-width="2"/>
+              <text x="0" y="46" text-anchor="middle">Temperature</text>
+            </g>
+            <g transform="translate(320,60)">
+              <circle class="sensor-pulse" cx="0" cy="0" r="24" fill="none" stroke="var(--yellow)" stroke-width="2"/>
+              <text x="0" y="46" text-anchor="middle">Energy generated</text>
+            </g>
+            <g transform="translate(320,220)">
+              <circle class="sensor-pulse" cx="0" cy="0" r="24" fill="none" stroke="var(--yellow)" stroke-width="2"/>
+              <text x="0" y="46" text-anchor="middle">Device health</text>
+            </g>
+          </g>
+          <!-- wireless lines to platform -->
+          <g stroke="var(--steel)" stroke-width="1.6" fill="none">
+            <path class="wireless-dash" d="M144 60 C 500 60, 600 130, 760 150"/>
+            <path class="wireless-dash" d="M144 140 C 400 140, 600 150, 760 150"/>
+            <path class="wireless-dash" d="M144 220 C 500 220, 600 170, 760 150"/>
+            <path class="wireless-dash" d="M344 60 C 550 60, 650 120, 760 150"/>
+            <path class="wireless-dash" d="M344 220 C 550 220, 650 180, 760 150"/>
+          </g>
+          <!-- platform node -->
+          <g transform="translate(830,150)">
+            <rect x="-60" y="-40" width="120" height="80" rx="6" fill="#1c2027" stroke="var(--electric)" stroke-width="1.5"/>
+            <text x="0" y="-6" text-anchor="middle" fill="var(--paper)" font-size="12">PulseRoads</text>
+            <text x="0" y="14" text-anchor="middle" fill="var(--paper)" font-size="12">platform</text>
+          </g>
+        </svg>
+      </div>
+      <div class="cap">Every reading — pressure, traffic, heat, output, health — streams live to the software layer.</div>
+    </div>
+
+    <!-- SCENE 4b: Software architecture -->
+    <div class="scene" data-duration="10500" id="scene-4b">
+      <div class="scene-title">Inside the software system</div>
+      <div class="scene-inner">
+        <svg viewBox="0 0 1000 430" width="100%" height="auto">
+          <rect x="0" y="0" width="1000" height="430" fill="#12151a"/>
+
+          <!-- Layer 1: Edge devices -->
+          <rect class="hbox h1" x="300" y="330" width="400" height="64" rx="4"/>
+          <text x="500" y="357" text-anchor="middle" fill="var(--paper)" font-size="13">Edge devices</text>
+          <text x="500" y="376" text-anchor="middle" fill="var(--steel)" font-size="11">pressure · traffic · temp · energy · health sensors</text>
+
+          <!-- arrow 1 -->
+          <path class="flow-dash" d="M500 330 L500 300" stroke="var(--electric)" stroke-width="2" fill="none" marker-end="url(#arrUp)"/>
+
+          <!-- Layer 2: Connectivity -->
+          <rect class="hbox h2" x="330" y="240" width="340" height="60" rx="4"/>
+          <text x="500" y="266" text-anchor="middle" fill="var(--paper)" font-size="13">Connectivity</text>
+          <text x="500" y="284" text-anchor="middle" fill="var(--steel)" font-size="11">low-power wireless uplink</text>
+
+          <!-- arrow 2 -->
+          <path class="flow-dash" d="M500 240 L500 210" stroke="var(--electric)" stroke-width="2" fill="none" marker-end="url(#arrUp)"/>
+
+          <!-- Layer 3: Cloud platform (3 sub-modules) -->
+          <rect class="hbox h3" x="150" y="145" width="700" height="65" rx="4"/>
+          <text x="500" y="165" text-anchor="middle" fill="var(--paper)" font-size="13">Cloud platform</text>
+          <g font-family="Space Grotesk" font-size="11" fill="var(--steel)">
+            <text x="270" y="188" text-anchor="middle">Ingestion</text>
+            <text x="500" y="188" text-anchor="middle">Processing</text>
+            <text x="730" y="188" text-anchor="middle">Storage</text>
+          </g>
+          <line x1="380" y1="150" x2="380" y2="205" stroke="#2f343c"/>
+          <line x1="620" y1="150" x2="620" y2="205" stroke="#2f343c"/>
+
+          <!-- arrow 3 -->
+          <path class="flow-dash" d="M500 145 L500 118" stroke="var(--electric)" stroke-width="2" fill="none" marker-end="url(#arrUp)"/>
+
+          <!-- Layer 4: AI analytics -->
+          <rect class="hbox h4" x="330" y="58" width="340" height="60" rx="4"/>
+          <text x="500" y="83" text-anchor="middle" fill="var(--paper)" font-size="13">AI analytics engine</text>
+          <text x="500" y="101" text-anchor="middle" fill="var(--steel)" font-size="11">traffic &amp; yield forecasting</text>
+
+          <!-- side branch to dashboard -->
+          <path class="flow-dash" d="M670 88 L 850 88 L850 145" stroke="var(--yellow)" stroke-width="2" fill="none" marker-end="url(#arrDownY)"/>
+
+          <!-- Layer 5: Dashboard & alerts -->
+          <rect class="hbox h5" x="770" y="145" width="180" height="65" rx="4"/>
+          <text x="860" y="170" text-anchor="middle" fill="var(--paper)" font-size="12">Dashboard</text>
+          <text x="860" y="188" text-anchor="middle" fill="var(--paper)" font-size="12">&amp; alerts</text>
+
+          <defs>
+            <marker id="arrUp" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,8 L4,0 L8,8 Z" fill="var(--electric)"/>
+            </marker>
+            <marker id="arrDownY" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,0 L8,0 L4,8 Z" fill="var(--yellow)"/>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+      <div class="cap">Sensor data climbs from the road, through the cloud and AI forecasting, straight to the dashboard.</div>
+    </div>
+
+    <!-- SCENE 5: Dashboard -->
+    <div class="scene" data-duration="10000" id="scene-5">
+      <div class="scene-title">What the dashboard shows</div>
+      <div class="scene-inner">
+        <div class="dash-panel">
+          <div class="dash-row">
+            <div class="stat"><div class="stat-label">Energy generated today</div><div class="stat-val energy" data-count="4820" data-suffix=" Wh">0 Wh</div></div>
+            <div class="stat"><div class="stat-label">Energy stored</div><div class="stat-val electric" data-count="3140" data-suffix=" Wh">0 Wh</div></div>
+            <div class="stat"><div class="stat-label">Traffic count</div><div class="stat-val" data-count="1926" data-suffix="">0</div></div>
+            <div class="stat"><div class="stat-label">Road temperature</div><div class="stat-val" data-count="41" data-suffix="°C">0°C</div></div>
+            <div class="stat"><div class="stat-label">Device status</div><div class="stat-val" style="color:var(--green)">Online</div></div>
+          </div>
+          <svg class="trendline" viewBox="0 0 600 70">
+            <path class="trend-path" d="M0,55 L60,48 L120,50 L180,32 L240,38 L300,20 L360,26 L420,12 L480,18 L540,6 L600,10"/>
+          </svg>
+          <div class="ai-chip">▲ High traffic expected — higher energy generation forecast</div>
+        </div>
+      </div>
+      <div class="cap">Live generation, storage, traffic and health — with AI forecasting what's ahead.</div>
+    </div>
+
+    <!-- SCENE 6: Impact -->
+    <div class="scene" data-duration="10000" id="scene-6">
+      <div class="scene-title">One breaker, then a whole city</div>
+      <div class="scene-inner">
+        <svg viewBox="0 0 1000 340" width="100%" height="auto">
+          <rect x="0" y="0" width="1000" height="340" fill="#12151a"/>
+          <!-- simple city grid -->
+          <g stroke="#2a2e35" stroke-width="1">
+            <line x1="0" y1="90" x2="1000" y2="90"/><line x1="0" y1="180" x2="1000" y2="180"/>
+            <line x1="200" y1="0" x2="200" y2="340"/><line x1="500" y1="0" x2="500" y2="340"/><line x1="800" y1="0" x2="800" y2="340"/>
+          </g>
+          <!-- installation nodes -->
+          <g>
+            <circle cx="200" cy="90" r="5" fill="var(--yellow)"/>
+            <circle class="node-pulse" cx="200" cy="90" r="3" fill="none" stroke="var(--yellow)"/>
+            <circle cx="500" cy="180" r="5" fill="var(--yellow)"/>
+            <circle class="node-pulse" cx="500" cy="180" r="3" fill="none" stroke="var(--yellow)"/>
+            <circle cx="800" cy="90" r="5" fill="var(--yellow)"/>
+            <circle class="node-pulse" cx="800" cy="90" r="3" fill="none" stroke="var(--yellow)"/>
+          </g>
+          <!-- powered devices -->
+          <g font-family="Space Grotesk" font-size="11" fill="var(--paper)">
+            <g transform="translate(80,270)"><rect x="-16" y="-16" width="32" height="32" rx="4" fill="#1c2027" stroke="var(--electric)"/><text x="0" y="36" text-anchor="middle">IoT sensor</text></g>
+            <g transform="translate(320,290)"><rect x="-16" y="-16" width="32" height="32" rx="4" fill="#1c2027" stroke="var(--electric)"/><text x="0" y="36" text-anchor="middle">Road indicator</text></g>
+            <g transform="translate(560,270)"><rect x="-16" y="-16" width="32" height="32" rx="4" fill="#1c2027" stroke="var(--electric)"/><text x="0" y="36" text-anchor="middle">Traffic camera</text></g>
+            <g transform="translate(800,290)"><rect x="-16" y="-16" width="32" height="32" rx="4" fill="#1c2027" stroke="var(--electric)"/><text x="0" y="36" text-anchor="middle">Comm. device</text></g>
+          </g>
+          <g class="impact-line" stroke="var(--electric)" stroke-width="1.6" fill="none">
+            <path d="M200 90 L80 254"/>
+            <path d="M500 180 L320 274"/>
+            <path d="M500 180 L560 254"/>
+            <path d="M800 90 L800 274"/>
+          </g>
+        </svg>
+        <div class="endcard">
+          <h2>PulseRoads</h2>
+          <p>Turning every vehicle movement into useful energy.</p>
+          <a class="linkbtn" href="https://pulseroads.netlify.app/" target="_blank" rel="noopener">pulseroads.netlify.app ↗</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="controls" id="dots"></div>
+  <button class="playbtn" id="playPause">❚❚</button>
+</div>
+
+<script>
+// ambient floating particles on the title card
+(function(){
+  const wrap = document.getElementById('ambient');
+  if(!wrap) return;
+  const n = 22;
+  for(let i=0;i<n;i++){
+    const s = document.createElement('span');
+    const size = 2 + Math.random()*3;
+    s.style.width = size+'px';
+    s.style.height = size+'px';
+    s.style.left = (Math.random()*100)+'%';
+    s.style.bottom = (-10 - Math.random()*20)+'px';
+    s.style.background = Math.random() > 0.5 ? 'var(--yellow)' : 'var(--electric)';
+    s.style.animationDuration = (6 + Math.random()*8)+'s';
+    s.style.animationDelay = (Math.random()*8)+'s';
+    wrap.appendChild(s);
+  }
+})();
+
+const scenes = Array.from(document.querySelectorAll('.scene'));
+let current = 0;
+let timer = null;
+let raf = null;
+let playing = false;
+let sceneStart = 0;
+let elapsedPaused = 0;
+
+const dotsWrap = document.getElementById('dots');
+scenes.forEach((s,i)=>{
+  if(i===0) return; // no dot for title
+  const d = document.createElement('div');
+  d.className='dot';
+  d.dataset.i = i;
+  d.addEventListener('click', ()=> goTo(i, true));
+  dotsWrap.appendChild(d);
+});
+function updateDots(){
+  const dots = dotsWrap.querySelectorAll('.dot');
+  dots.forEach(d=> d.classList.toggle('on', parseInt(d.dataset.i)===current));
+}
+
+function resetSceneAnimations(el){
+  el.classList.remove('active');
+  void el.offsetWidth;
+}
+
+function goTo(index, userTriggered){
+  clearInterval(timer);
+  cancelAnimationFrame(raf);
+  scenes[current].classList.remove('active');
+  current = (index + scenes.length) % scenes.length;
+  const el = scenes[current];
+  resetSceneAnimations(el);
+  el.classList.add('active');
+  updateDots();
+  document.getElementById('progressBar').style.width='0%';
+
+  if(current === 0){
+    playing = false;
+    document.getElementById('playPause').textContent='▶';
+    return;
+  }
+  playing = true;
+  document.getElementById('playPause').textContent='❚❚';
+  const duration = parseInt(el.dataset.duration || '8000');
+  sceneStart = performance.now();
+  runProgress(duration);
+  timer = setTimeout(()=>{ goTo(current+1 >= scenes.length ? 1 : current+1); }, duration);
+}
+
+function runProgress(duration){
+  const bar = document.getElementById('progressBar');
+  function step(ts){
+    if(!playing) return;
+    const p = Math.min(1, (ts - sceneStart)/duration);
+    bar.style.width = (p*100)+'%';
+    if(p<1) raf = requestAnimationFrame(step);
+  }
+  raf = requestAnimationFrame(step);
+}
+
+document.getElementById('startBtn').addEventListener('click', ()=> goTo(1));
+
+document.getElementById('playPause').addEventListener('click', ()=>{
+  if(current===0) return;
+  if(playing){
+    playing=false;
+    clearInterval(timer); cancelAnimationFrame(raf);
+    document.getElementById('playPause').textContent='▶';
+    scenes[current].style.animationPlayState='paused';
+  } else {
+    playing=true;
+    document.getElementById('playPause').textContent='❚❚';
+    const el = scenes[current];
+    const duration = parseInt(el.dataset.duration || '8000');
+    const already = parseFloat(document.getElementById('progressBar').style.width)/100 * duration || 0;
+    sceneStart = performance.now() - already;
+    runProgress(duration);
+    timer = setTimeout(()=>{ goTo(current+1 >= scenes.length ? 1 : current+1); }, duration-already);
+  }
+});
+</script>
+</body>
+</html>
