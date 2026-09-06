@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PulseRoads | Clean Kinetic Energy Generation</title>
+    <style>
+        :root {
+            --bg-color: #0b0f12;
+            --card-bg: #151c24;
+            --accent-green: #39ff14;
+            --accent-glow: rgba(57, 255, 20, 0.2);
+            --text-main: #f0f4f8;
+            --text-sub: #94a3b8;
+            --border-color: #24303e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 8%;
+            background: rgba(11, 15, 18, 0.9);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            color: var(--text-main);
+        }
+
+        .logo-sub {
+            font-size: 0.65rem;
+            color: var(--text-sub);
+            letter-spacing: 1px;
+            display: block;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-green);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 5%;
+            background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 70%);
+        }
+
+        .hero h1 {
+            font-size: 3.2rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hero h1 span {
+            color: var(--accent-green);
+            text-shadow: 0 0 15px var(--accent-glow);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-sub);
+            max-width: 700px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent-green);
+            color: #000;
+            padding: 0.8rem 2rem;
+            border-radius: 4px;
+            font-weight: 700;
+            text-decoration: none;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(57, 255, 20, 0.4);
+        }
+
+        /* Sections */
+        section {
+            padding: 4rem 8%;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 3rem;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: var(--accent-green);
+            margin: 10px auto 0;
+        }
+
+        /* Grid Layouts */
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        .card:hover {
+            border-color: var(--accent-green);
+        }
+
+        .card h3 {
+            color: var(--accent-green);
+            margin-bottom: 0.8rem;
+        }
+
+        /* Team Section */
+        .team-card {
+            text-align: center;
+        }
+
+        .team-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--border-color);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-green);
+            border: 2px solid var(--accent-green);
+        }
+
+        .role-badge {
+            display: inline-block;
+            font-size: 0.75rem;
+            background: var(--accent-glow);
+            color: var(--accent-green);
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            margin-top: 0.5rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo-container">
+            <svg width="40" height="40" viewBox="0 0 100 100" fill="none">
+                <path d="M10 50 Q 50 20 90 50 Q 50 80 10 50 Z" stroke="#ffffff" stroke-width="3" fill="none"/>
+                <path d="M55 25 L35 55 L50 55 L45 75 L65 45 L50 45 Z" fill="#39ff14"/>
+            </svg>
+            <div>
+                <span class="logo-text">PULSEROADS</span>
+                <span class="logo-sub">ELECTRICITY FLOWS WHERE WHEELS GO</span>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#about">About</a></li>
+            <li><a href="#mechanism">Mechanism</a></li>
+            <li><a href="#team">Team</a></li>
+            <li><a href="#specs">Specifications</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <h1>Electricity Flows <span>Where Wheels Go</span></h1>
+        <p>Harnessing vehicle kinetic energy through innovative rack and pinion speed breaker mechanisms to provide decentralized power generation.</p>
+        <a href="#mechanism" class="btn-primary">Explore Technology</a>
+    </section>
+
+    <section id="about">
+        <h2 class="section-title">Project Overview</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3>The Problem</h3>
+                <p>Conventional power generation relies heavily on fossil fuels, contributing to air pollution and environmental degradation. Concurrently, kinetic energy from heavy vehicular traffic on speed breakers is continuously lost as heat and vibration.</p>
+            </div>
+            <div class="card">
+                <h3>The Solution</h3>
+                <p>PulseRoads converts vertical displacement caused by passing vehicles into rotational energy using an embedded rack and pinion assembly, driving low-RPM dynamos to output continuous clean electricity.</p>
+            </div>
+            <div class="card">
+                <h3>Key Impact</h3>
+                <p>A modular, retrofittable system designed to power street lights, EV charging stations, and rural off-grid areas without consuming fuel.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="mechanism">
+        <h2 class="section-title">Core Mechanical Design</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3>1. Speed Breaker Platform</h3>
+                <p>Functions as the upper interface, depressing vertically under the force of vehicle weight to initiate motion.</p>
+            </div>
+            <div class="card">
+                <h3>2. Linear Rack & Pinion</h3>
+                <p>Transfers downward linear motion to the linear rack, engaging with the pinion gear to produce smooth rotation.</p>
+            </div>
+            <div class="card">
+                <h3>3. Return Springs</h3>
+                <p>Spring-loaded assemblies restore the platform and rack to initial positions after each vehicle pass for ongoing operation.</p>
+            </div>
+            <div class="card">
+                <h3>4. Generator (Dynamo)</h3>
+                <p>Converts rotational shaft movement into electrical energy via electromagnetic induction.</p>
+            </div>
+            <div class="card">
+                <h3>5. Power Management</h3>
+                <p>Utilizes rectifiers, voltage regulators, and storage units (batteries/supercapacitors) to stabilize grid-ready output.</p>
+            </div>
+            <div class="card">
+                <h3>6. Smart Maintenance</h3>
+                <p>Designed for integration with IoT monitoring for predictive maintenance and alignment checks under heavy traffic.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="team">
+        <h2 class="section-title">Founding Team</h2>
+        <div class="grid-3">
+            <div class="card team-card">
+                <div class="team-avatar">SP</div>
+                <h3>Shrestha Pandey</h3>
+                <p>Founder & CEO</p>
+                <span class="role-badge">Lead Executive</span>
+            </div>
+            <div class="card team-card">
+                <div class="team-avatar">SD</div>
+                <h3>Shreya Dwivedi</h3>
+                <p>Co-Founder & CTO</p>
+                <span class="role-badge">Technical Lead</span>
+            </div>
+            <div class="card team-card">
+                <div class="team-avatar">SG</div>
+                <h3>Shreya Gupta</h3>
+                <p>Head of R&D</p>
+                <span class="role-badge">Mechanical Systems</span>
+            </div>
+            <div class="card team-card">
+                <div class="team-avatar">AT</div>
+                <h3>Ayush Tiwari</h3>
+                <p>Lead Hardware Engineer</p>
+                <span class="role-badge">Prototyping</span>
+            </div>
+            <div class="card team-card">
+                <div class="team-avatar">HM</div>
+                <h3>Harshita Mishra</h3>
+                <p>Operations & Product Manager</p>
+                <span class="role-badge">Deployments</span>
+            </div>
+            <div class="card team-card">
+                <div class="team-avatar">AS</div>
+                <h3>Atharva Sharma</h3>
+                <p>Electrical Systems Specialist</p>
+                <span class="role-badge">Power Electronics</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="specs">
+        <h2 class="section-title">Estimated Energy Yield</h2>
+        <div class="grid-3">
+            <div class="card">
+                <h3>Traffic Rate</h3>
+                <p>1 vehicle pass every 10 seconds</p>
+            </div>
+            <div class="card">
+                <h3>Displacement</h3>
+                <p>5 cm – 10 cm platform compression per pass</p>
+            </div>
+            <div class="card">
+                <h3>Power Generation</h3>
+                <p>0.05 kWh – 0.1 kWh generated per 100 vehicle passes</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2026 PulseRoads Technology. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>
